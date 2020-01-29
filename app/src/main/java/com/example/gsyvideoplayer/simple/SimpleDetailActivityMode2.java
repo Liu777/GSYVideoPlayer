@@ -34,7 +34,7 @@ public class SimpleDetailActivityMode2 extends AppCompatActivity {
 
         detailPlayer = (StandardGSYVideoPlayer) findViewById(R.id.detail_player);
 
-        String url = "http://wdquan-space.b0.upaiyun.com/VIDEO/2018/11/22/ae0645396048_hls_time10.m3u8";
+        String url = "http://7xjmzj.com1.z0.glb.clouddn.com/20171026175005_JObCxCE2.mp4";
 
         //增加封面
         ImageView imageView = new ImageView(this);
@@ -55,7 +55,7 @@ public class SimpleDetailActivityMode2 extends AppCompatActivity {
                 .setIsTouchWiget(true)
                 .setRotateViewAuto(false)
                 .setLockLand(false)
-                .setAutoFullWithSize(true)
+                .setAutoFullWithSize(false)
                 .setShowFullAnimation(false)
                 .setNeedLockFull(true)
                 .setUrl(url)

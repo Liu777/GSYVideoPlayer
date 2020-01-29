@@ -1,14 +1,14 @@
 package com.example.gsyvideoplayer.switchplay;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
 import android.view.View;
+
+import com.shuyu.gsyvideoplayer.listener.GSYMediaPlayerListener;
 
 
 public class SwitchUtil {
 
     private static SwitchVideo sSwitchVideo;
+    private static GSYMediaPlayerListener sMediaPlayerListener;
 
     public static void optionPlayer(final SwitchVideo gsyVideoPlayer, String url, boolean cache, String title) {
         //增加title
@@ -25,7 +25,7 @@ public class SwitchUtil {
         //是否根据视频尺寸，自动选择竖屏全屏或者横屏全屏
         gsyVideoPlayer.setAutoFullWithSize(true);
         //音频焦点冲突时是否释放
-        gsyVideoPlayer.setReleaseWhenLossAudio(false);
+        gsyVideoPlayer.setReleaseWhenLossAudio(true);
         //全屏动画
         gsyVideoPlayer.setShowFullAnimation(false);
         //小屏时不触摸滑动
@@ -41,6 +41,7 @@ public class SwitchUtil {
 
     public static void savePlayState(SwitchVideo switchVideo) {
         sSwitchVideo = switchVideo.saveState();
+        sMediaPlayerListener = switchVideo;
     }
 
     public static void clonePlayState(SwitchVideo switchVideo) {
@@ -48,6 +49,10 @@ public class SwitchUtil {
     }
 
     public static void release() {
+        if (sMediaPlayerListener != null) {
+            sMediaPlayerListener.onAutoCompletion();
+        }
         sSwitchVideo = null;
+        sMediaPlayerListener = null;
     }
 }

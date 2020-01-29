@@ -17,15 +17,18 @@ import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.LoopingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
 import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
+import com.google.android.exoplayer2.upstream.RawResourceDataSource;
 import com.google.android.exoplayer2.upstream.cache.Cache;
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource;
 import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory;
@@ -56,7 +59,14 @@ public class ExoSourceManager {
     /**
      * 忽律Https证书校验
      */
-    private static boolean mSkipSSLChain = false;
+    private static boolean sSkipSSLChain = false;
+
+    private static int sHttpReadTimeout = -1;
+
+    private static int sHttpConnectTimeout = -1;
+
+
+    private static boolean s = false;
 
     private Context mAppContext;
 
@@ -95,6 +105,27 @@ public class ExoSourceManager {
         mDataSource = dataSource;
         Uri contentUri = Uri.parse(dataSource);
         int contentType = inferContentType(dataSource, overrideExtension);
+
+
+        if ("android.resource".equals(contentUri.getScheme())) {
+            DataSpec dataSpec = new DataSpec(contentUri);
+            final RawResourceDataSource rawResourceDataSource = new RawResourceDataSource(mAppContext);
+            try {
+                rawResourceDataSource.open(dataSpec);
+            } catch (RawResourceDataSource.RawResourceDataSourceException e) {
+                e.printStackTrace();
+            }
+            DataSource.Factory factory = new DataSource.Factory() {
+                @Override
+                public DataSource createDataSource() {
+                    return rawResourceDataSource;
+                }
+            };
+            return new ProgressiveMediaSource.Factory(
+                    factory).createMediaSource(contentUri);
+
+        }
+
         switch (contentType) {
             case C.TYPE_SS:
                 mediaSource = new SsMediaSource.Factory(
@@ -112,14 +143,14 @@ public class ExoSourceManager {
                 break;
             case TYPE_RTMP:
                 RtmpDataSourceFactory rtmpDataSourceFactory = new RtmpDataSourceFactory(null);
-                mediaSource = new ExtractorMediaSource.Factory(rtmpDataSourceFactory)
-                        .setExtractorsFactory(new DefaultExtractorsFactory())
+                mediaSource = new ProgressiveMediaSource.Factory(rtmpDataSourceFactory,
+                        new DefaultExtractorsFactory())
                         .createMediaSource(contentUri);
                 break;
             case C.TYPE_OTHER:
             default:
-                mediaSource = new ExtractorMediaSource.Factory(getDataSourceFactoryCache(mAppContext, cacheEnable, preview, cacheDir))
-                        .setExtractorsFactory(new DefaultExtractorsFactory())
+                mediaSource = new ProgressiveMediaSource.Factory(getDataSourceFactoryCache(mAppContext, cacheEnable,
+                        preview, cacheDir), new DefaultExtractorsFactory())
                         .createMediaSource(contentUri);
                 break;
         }
@@ -228,7 +259,7 @@ public class ExoSourceManager {
 
 
     public static boolean isSkipSSLChain() {
-        return mSkipSSLChain;
+        return sSkipSSLChain;
     }
 
     /**
@@ -237,7 +268,30 @@ public class ExoSourceManager {
      * @param skipSSLChain true时是hulve
      */
     public static void setSkipSSLChain(boolean skipSSLChain) {
-        mSkipSSLChain = skipSSLChain;
+        sSkipSSLChain = skipSSLChain;
+    }
+
+
+    public static int getHttpReadTimeout() {
+        return sHttpReadTimeout;
+    }
+
+    /**
+     * 如果设置小于 0 就使用默认 8000 MILLIS
+     */
+    public static void setHttpReadTimeout(int httpReadTimeout) {
+        ExoSourceManager.sHttpReadTimeout = httpReadTimeout;
+    }
+
+    public static int getHttpConnectTimeout() {
+        return sHttpConnectTimeout;
+    }
+
+    /**
+     * 如果设置小于 0 就使用默认 8000 MILLIS
+     */
+    public static void setHttpConnectTimeout(int httpConnectTimeout) {
+        ExoSourceManager.sHttpConnectTimeout = httpConnectTimeout;
     }
 
     /**
@@ -263,14 +317,23 @@ public class ExoSourceManager {
     }
 
     private DataSource.Factory getHttpDataSourceFactory(Context context, boolean preview) {
+        int connectTimeout = GSYExoHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS;
+        int readTimeout = GSYExoHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS;
+        if (sHttpConnectTimeout > 0) {
+            connectTimeout = sHttpConnectTimeout;
+        }
+        if (sHttpReadTimeout > 0) {
+            readTimeout = sHttpReadTimeout;
+        }
         boolean allowCrossProtocolRedirects = false;
         if (mMapHeadData != null && mMapHeadData.size() > 0) {
             allowCrossProtocolRedirects = "true".equals(mMapHeadData.get("allowCrossProtocolRedirects"));
         }
-        if (mSkipSSLChain) {
+        if (sSkipSSLChain) {
             GSYExoHttpDataSourceFactory dataSourceFactory = new GSYExoHttpDataSourceFactory(Util.getUserAgent(context,
-                    TAG), preview ? null : new DefaultBandwidthMeter(), GSYExoHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
-                    GSYExoHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS, allowCrossProtocolRedirects);
+                    TAG), preview ? null : new DefaultBandwidthMeter.Builder(mAppContext).build(),
+                    connectTimeout,
+                    readTimeout, allowCrossProtocolRedirects);
             if (mMapHeadData != null && mMapHeadData.size() > 0) {
                 for (Map.Entry<String, String> header : mMapHeadData.entrySet()) {
                     dataSourceFactory.getDefaultRequestProperties().set(header.getKey(), header.getValue());
@@ -279,8 +342,9 @@ public class ExoSourceManager {
             return dataSourceFactory;
         }
         DefaultHttpDataSourceFactory dataSourceFactory = new DefaultHttpDataSourceFactory(Util.getUserAgent(context,
-                TAG), preview ? null : new DefaultBandwidthMeter(), GSYExoHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
-                GSYExoHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS, allowCrossProtocolRedirects);
+                TAG), preview ? null : new DefaultBandwidthMeter.Builder(mAppContext).build(),
+                connectTimeout,
+                readTimeout, allowCrossProtocolRedirects);
         if (mMapHeadData != null && mMapHeadData.size() > 0) {
             for (Map.Entry<String, String> header : mMapHeadData.entrySet()) {
                 dataSourceFactory.getDefaultRequestProperties().set(header.getKey(), header.getValue());

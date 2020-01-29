@@ -107,7 +107,7 @@ GSYVideoManager.instance().setOptionModelList(list);
 ```
 <activity
     android:name=".PlayActivity"
-    android:configChanges="orientation|keyboardHidden|screenSize"
+    android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
     android:screenOrientation="portrait" />
 ```
 
@@ -233,14 +233,17 @@ VideoOptionModel videoOptionModel = new VideoOptionModel(IjkMediaPlayer.OPT_CATE
         list.add(videoOptionModel);
 ```
 
-#### 18、url切换400（http与https域名共用）
+#### 18、url切换400/404（http与https域名共用等）
 
 ```
-VideoOptionModel videoOptionModel =
+        VideoOptionModel videoOptionModel =
                 new VideoOptionModel(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "dns_cache_clear", 1);
         List<VideoOptionModel> list = new ArrayList<>();
         list.add(videoOptionModel);
+        VideoOptionModel videoOptionModel2 = new VideoOptionModel(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "dns_cache_timeout", -1);
+        list.add(videoOptionModel2);
         GSYVideoManager.instance().setOptionModelList(list);
+
 ```
 
 #### 19、全屏与非全屏的同步问题
@@ -303,6 +306,26 @@ VideoOptionModel videoOptionModel =
 
 https://stackoverflow.com/questions/6445052/android-context-memory-leak-listview-due-to-audiomanager
 
+#### 22、重连次数
+```
+VideoOptionModel videoOptionModel =
+                new VideoOptionModel(IjkMediaPlayer.OPT_CATEGORY_PLAYER,"reconnect",5);
+        List<VideoOptionModel> list = new ArrayList<>();
+        list.add(videoOptionModel);
+        GSYVideoManager.instance().setOptionModelList(list);
+```
+
+#### 22、ijk 模式的 mkv 字幕
+
+出了选择 track 之外，还可以配置
+
+```
+VideoOptionModel videoOptionModel =
+ new VideoOptionModel(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "subtitle", 1);
+List<VideoOptionModel> list = new ArrayList<>();
+list.add(videoOptionModel);
+GSYVideoManager.instance().setOptionModelList(list);
+```
 
 
 #### 更多配置

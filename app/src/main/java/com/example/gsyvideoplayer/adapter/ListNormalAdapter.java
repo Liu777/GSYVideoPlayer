@@ -35,6 +35,7 @@ public class ListNormalAdapter extends BaseAdapter {
     private Context context;
 
     private StandardGSYVideoPlayer curPlayer;
+    private StandardGSYVideoPlayer itemPlayer;
 
     protected OrientationUtils orientationUtils;
 
@@ -82,7 +83,7 @@ public class ListNormalAdapter extends BaseAdapter {
 
         //final String url = "https://res.exexm.com/cw_145225549855002";
         final String urlH = "http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f20.mp4";
-        final String urlV = "http://wdquan-space.b0.upaiyun.com/VIDEO/2018/11/22/ae0645396048_hls_time10.m3u8";
+        final String urlV = "http://7xjmzj.com1.z0.glb.clouddn.com/20171026175005_JObCxCE2.mp4";
         final String url = (position % 2 == 0) ? urlH : urlV;
         //final String url = "http://111.198.24.133:83/yyy_login_server/pic/YB059284/97778276040859/1.mp4";
 
@@ -177,7 +178,11 @@ public class ListNormalAdapter extends BaseAdapter {
                 if (!holder.gsyVideoPlayer.getCurrentPlayer().isIfCurrentIsFullscreen()) {
                     GSYVideoManager.instance().setNeedMute(true);
                 }
+                if (holder.gsyVideoPlayer.getCurrentPlayer().isIfCurrentIsFullscreen()) {
+                   GSYVideoManager.instance().setLastListener(holder.gsyVideoPlayer);
+                }
                 curPlayer = (StandardGSYVideoPlayer) objects[1];
+                itemPlayer = holder.gsyVideoPlayer;
                 isPlay = true;
                 if (getListNeedAutoLand()) {
                     //重力全屏工具类
@@ -208,6 +213,7 @@ public class ListNormalAdapter extends BaseAdapter {
             public void onAutoComplete(String url, Object... objects) {
                 super.onAutoComplete(url, objects);
                 curPlayer = null;
+                itemPlayer = null;
                 isPlay = false;
                 isFull = false;
                 if (getListNeedAutoLand()) {
@@ -251,7 +257,7 @@ public class ListNormalAdapter extends BaseAdapter {
      * @return 返回true为支持列表重力全屏
      */
     public boolean getListNeedAutoLand() {
-        return false;
+        return true;
     }
 
     private void initOrientationUtils(StandardGSYVideoPlayer standardGSYVideoPlayer, boolean full) {
@@ -294,8 +300,8 @@ public class ListNormalAdapter extends BaseAdapter {
 
     public void onConfigurationChanged(Activity activity, Configuration newConfig) {
         //如果旋转了就全屏
-        if (isPlay && curPlayer != null && orientationUtils != null) {
-            curPlayer.onConfigurationChanged(activity, newConfig, orientationUtils, false, true);
+        if (isPlay && itemPlayer != null && orientationUtils != null) {
+            itemPlayer.onConfigurationChanged(activity, newConfig, orientationUtils, false, true);
         }
     }
 

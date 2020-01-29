@@ -8,7 +8,8 @@ import android.view.Surface;
 import com.google.android.exoplayer2.video.DummySurface;
 import com.shuyu.gsyvideoplayer.cache.ICacheManager;
 import com.shuyu.gsyvideoplayer.model.VideoOptionModel;
-import com.shuyu.gsyvideoplayer.player.IPlayerManager;
+import com.shuyu.gsyvideoplayer.player.BasePlayerManager;
+import com.shuyu.gsyvideoplayer.utils.Debuger;
 
 import java.util.List;
 
@@ -18,7 +19,7 @@ import tv.danmaku.ijk.media.player.IMediaPlayer;
  * Created by guoshuyu on 2018/5/16.
  * 自定义player管理器，装载自定义exo player，实现无缝切换效果
  */
-public class GSYExoPlayerManager implements IPlayerManager {
+public class GSYExoPlayerManager extends BasePlayerManager {
 
     private GSYExo2MediaPlayer mediaPlayer;
 
@@ -40,6 +41,8 @@ public class GSYExoPlayerManager implements IPlayerManager {
         }
         try {
             mediaPlayer.setLooping(((GSYExoModel) msg.obj).isLooping());
+            Debuger.printfError("###### " + ((GSYExoModel) msg.obj).getOverrideExtension());
+            mediaPlayer.setOverrideExtension(((GSYExoModel) msg.obj).getOverrideExtension());
             mediaPlayer.setDataSource(((GSYExoModel) msg.obj).getUrls(), ((GSYExoModel) msg.obj).getMapHeadData(), ((GSYExoModel) msg.obj).isCache());
             //很遗憾，EXO2的setSpeed只能在播放前生效
             if (((GSYExoModel) msg.obj).getSpeed() != 1 && ((GSYExoModel) msg.obj).getSpeed() > 0) {

@@ -195,13 +195,43 @@
             android:layout_marginTop="20dp"
             android:text="列表带广告模式" />
 
+
+        <Button
+            android:id="@+id/media_codec"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="硬解码支持" />
+        <Button
+            android:id="@+id/detail_download_activity"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="缓存下载支持" />
+        <Button
+            android:id="@+id/detail_normal_activity"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="普通 Activity" />
         <Button
             android:id="@+id/open_custom_exo"
             android:layout_width="240dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="自定义Exo" />
-
+        <Button
+            android:id="@+id/detail_subtitle_activity"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="自定义Exo支持字幕" />
+        <Button
+            android:id="@+id/detail_audio_activity"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="音频" />
         <Button
             android:id="@+id/clear_cache"
             android:layout_width="240dp"
